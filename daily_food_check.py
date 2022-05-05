@@ -57,7 +57,7 @@ def download_imgs(student):
                 code.write(img.content)
         # os.system('cls' if os.name == 'nt' else 'clear')
         i += 1
-        print("下载图片：已完成：", i / count * 100 , "%")
+        print("下载图片：已完成：", i / count*100  , "%")
     pass
 
 # 判断坐标的包含关系
@@ -223,6 +223,8 @@ def check_basic_data(basic_value):
 
 def check_alipay_data(alipay_value, basic_check_value):
     res = []
+    i = 1
+    count = len(basic_check_value)
     for stu in basic_check_value:
         res_item = dict()
         for item in alipay_value:
@@ -241,6 +243,8 @@ def check_alipay_data(alipay_value, basic_check_value):
                     res_item['info'] = '转账错误！'
                     res_item['info'] += item['err']
                     break
+        print("处理进度：", i / count * 100, "%")
+        i+=1
         res.append(res_item)
     return res
 
@@ -258,8 +262,8 @@ def writeExcel(alipay_check_value, data_origin):
     error_data = pd.DataFrame(error)
     from pandas import DataFrame
     df = DataFrame(error_data)
-    df.to_excel('1.xlsx')
-    pass
+    df.to_excel(save_path)
+    return error
 
 if __name__ == '__main__':
     # 读取excel数据，获取姓名-总金额，获取早餐、午餐、午餐白米饭、晚餐、晚餐白米饭，图片结果
