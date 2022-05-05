@@ -7,6 +7,9 @@ import pandas as pd
 import requests
 import xlrd
 import easyocr
+# @Author: hairu,WU
+# @time: 2022/5/5
+# @location: fudan.u
 
 save_path = './result.xls'
 
@@ -36,6 +39,7 @@ def basic_data(data):
         student['diner'] = diner
         student['diner_rice'] = diner_rice
         student['all_money'] = all_money
+        student['支付宝付款截图上传'] = alipay
         student_list.append(student)
     return student_list
 
@@ -93,11 +97,13 @@ def get_alipay(student):
         ret = dict()
         ret['所在学院（必填）'] = stu['所在学院（必填）']
         ret['姓名（必填）'] = stu['姓名（必填）']
+        ret['支付宝付款截图上传'] = stu['支付宝付款截图上传']
         reader = easyocr.Reader(['ch_sim', 'en'], gpu=True)  # need to run only once to load model into memory
         uri = r"./imgs/" + str(datetime.date.today ()) + "/" + stu['所在学院（必填）']+"/"+stu['姓名（必填）']+".jpg"
         with open(uri, 'rb') as f:
             img = f.read()
             result = reader.readtext(img)
+            print(result)
             # 处理单张图片内容
             # 读取支付宝图片信息 [<支付人姓名>，<支付人学院>,<支付日期，xx>, <支付金额，xx>, <收款人，xx>,]
             # https://www.jaided.ai/easyocr/documentation/
@@ -179,6 +185,7 @@ def check_basic_data(basic_value):
         res = dict()
         res['学院'] = item['student_school']
         res['姓名'] = item['student_name']
+        res['支付宝付款截图上传'] = item['支付宝付款截图上传']
         res['早餐'] = 0
         breakfast = item['breakfast']
 
@@ -230,6 +237,7 @@ def check_alipay_data(alipay_value, basic_check_value):
         for item in alipay_value:
             # print(item)
             if stu['学院'] == item['所在学院（必填）'] and stu['姓名'] == item['姓名（必填）']:
+                res_item['支付宝付款截图上传'] = item['支付宝付款截图上传']
                 res_item['学院'] = item['所在学院（必填）']
                 res_item['姓名'] = item['姓名（必填）']
                 res_item['转账时间'] = item['转账时间']
@@ -237,12 +245,11 @@ def check_alipay_data(alipay_value, basic_check_value):
                 if float(stu['表格填写金额']) == float(item['转账金额']):
                     res_item['info'] = '正确'
                     res_item['转账金额'] = float(item['转账金额'])
-                    break
                 else:
                     res_item['转账金额'] = float(item['转账金额'])
                     res_item['info'] = '转账错误！'
                     res_item['info'] += item['err']
-                    break
+                break
         print("处理进度：", i / count * 100, "%")
         i+=1
         res.append(res_item)
@@ -269,7 +276,7 @@ if __name__ == '__main__':
     # 读取excel数据，获取姓名-总金额，获取早餐、午餐、午餐白米饭、晚餐、晚餐白米饭，图片结果
     # <学院+'_'+姓名，[<早餐，money>,<午餐，money>,<晚餐，money>,<总金额，money>,<图片结果,money>,<备注, [图片日期不对，总金额不匹配]>]>
     # ------ 必须将excel另存为.xls
-    path = 'data.xls'
+    path = '0506-2.xls'
     data_origin = read_file(path)
     basic_value = basic_data(data_origin)    # 获取基本数据
     alipay_value = alipay_data(path)     #读取支付宝图片信息 [<支付日期，xx>, <支付金额，xx>, <收款人，xx>,<支付人姓名>，<支付人学院>]
